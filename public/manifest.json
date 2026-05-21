@@ -1,0 +1,33 @@
+{
+  "name": "Kasir SiGemoy",
+  "short_name": "Kasir SiGemoy",
+  "description": "Sistem POS untuk Kasir dan Pemilik Toko SiGemoy",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#6366f1",
+  "background_color": "#ffffff",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon1.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/Screenshot-web.png",
+      "sizes": "1506x978",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshots/Screenshot-mobile.png",
+      "sizes": "684x982",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}
