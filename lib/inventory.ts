@@ -1274,6 +1274,24 @@ export async function deleteRawMaterial(id: ID) {
   await evaluateAllProductsAvailability()
 }
 
+export async function deleteProduct(id: ID) {
+  const db = getDB()
+  await db.transaction("rw", [db.products, db.product_materials, db.transaction_items], async () => {
+    // Delete product materials mapping
+    const maps = await db.product_materials.where("product_id").equals(id).toArray()
+    if (maps.length) await db.product_materials.bulkDelete(maps.map((m) => m.id!))
+    
+    // Delete transaction items with this product
+    const txItems = await db.transaction_items.where("product_id").equals(id).toArray()
+    if (txItems.length) await db.transaction_items.bulkDelete(txItems.map((t) => t.id!))
+    
+    // Delete the product
+    await db.products.delete(id)
+  })
+  // Re-evaluate product availability after deletion
+  await evaluateAllProductsAvailability()
+}
+
 export async function getLowStockMaterials() {
   const db = getDB()
   const all = await db.raw_materials.toArray()

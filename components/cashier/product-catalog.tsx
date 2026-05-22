@@ -43,7 +43,7 @@ export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
         price: p.price,
         category: (p as any).category || "Menu", // read category from DB
         stock: p.is_active ? 100 : 0,
-        image_url: p.image_url || "/produk-pos.jpg",
+        image_url: p.image_url ?? "", 
         is_active: p.is_active,
       }))
       setProducts(mapped)
@@ -131,26 +131,43 @@ export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
         {filteredProducts.map((product) => (
           <Card key={product.id} className="overflow-hidden">
-            <div className="aspect-square relative">
-              <img
-                src={product.image_url || "/placeholder.svg?height=400&width=400&query=produk%20POS"}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-              {product.is_active ? (
-                <Badge variant="secondary" className="absolute top-2 right-2 text-xs">
-                  Tersedia
-                </Badge>
-              ) : (
-                <Badge variant="destructive" className="absolute top-2 right-2 text-xs">
-                  Bahan kurang
-                </Badge>
-              )}
-            </div>
-            <CardContent className="p-3 md:p-4 space-y-2 md:space-y-3">
-              <div>
-                <h3 className="font-semibold text-sm md:text-base line-clamp-2">{product.name}</h3>
-                <p className="text-xs text-muted-foreground">{product.category}</p>
+            {product.image_url && (
+              <div className="aspect-square relative">
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+                {product.is_active ? (
+                  <Badge variant="secondary" className="absolute top-2 right-2 text-xs">
+                    Tersedia
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="absolute top-2 right-2 text-xs">
+                    Bahan kurang
+                  </Badge>
+                )}
+              </div>
+            )}
+            <CardContent className={`p-3 md:p-4 flex flex-col h-full space-y-2 md:space-y-3 ${!product.image_url ? "pt-3 md:pt-4" : ""}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm md:text-base line-clamp-2 min-h-[48px]">{product.name}</h3>
+                  <p className="text-xs text-muted-foreground">{product.category}</p>
+                </div>
+                {!product.image_url && (
+                  <div>
+                    {product.is_active ? (
+                      <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                        Tersedia
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" className="text-xs whitespace-nowrap">
+                        Bahan kurang
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -162,7 +179,7 @@ export function ProductCatalog({ onAddToCart }: ProductCatalogProps) {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-auto">
                 <div className="flex items-center border rounded-lg">
                   <Button
                     variant="ghost"

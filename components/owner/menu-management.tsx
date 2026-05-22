@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Edit, Search, Save, X, Trash2 } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import {
   getProducts,
   searchMaterials,
@@ -15,6 +16,7 @@ import {
   createProductWithMaterials,
   updateProductWithMaterials,
   seedExamplesIfMissing,
+  deleteProduct,
 } from "@/lib/inventory"
 import type { ID } from "@/lib/types"
 
@@ -85,6 +87,24 @@ export function MenuManagement() {
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(price)
 
   const [selectedMats, setSelectedMats] = useState<SelectedMat[]>([])
+  const [deleteProductId, setDeleteProductId] = useState<ID | null>(null)
+  const [deleteProductName, setDeleteProductName] = useState<string>("")
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  async function handleDeleteProduct() {
+    if (!deleteProductId) return
+    try {
+      setIsDeleting(true)
+      await deleteProduct(deleteProductId)
+      setDeleteProductId(null)
+      setDeleteProductName("")
+      await load()
+    } catch (error) {
+      console.error("Error deleting product:", error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   async function openAdd() {
     setEditingId(null)
@@ -257,13 +277,25 @@ export function MenuManagement() {
                       }}
                     />
                   </div>
-                  <div className="rounded-md overflow-hidden border">
-                    <img
-                      src={form.image_url || "/placeholder.svg?height=320&width=480&query=foto%20menu"}
-                      alt="Preview foto menu"
-                      className="w-full h-40 object-cover"
-                    />
-                  </div>
+                  {form.image_url && (
+                    <div className="rounded-md overflow-hidden border relative">
+                      <img
+                        src={form.image_url}
+                        alt="Preview foto menu"
+                        className="w-full h-40 object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setForm((p) => ({ ...p, image_url: "" }))}
+                        className="absolute top-2 right-2"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Hapus Foto
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -310,14 +342,16 @@ export function MenuManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProducts.map((p) => (
           <Card key={p.id} className={`overflow-hidden ${!p.is_active ? "opacity-60" : ""}`}>
-            <div className="aspect-video w-full overflow-hidden bg-muted">
+            {p.image_url && (
+              <div className="aspect-video w-full overflow-hidden bg-muted">
               <img
-                src={p.image_url || "/placeholder.svg?height=300&width=600&query=foto%20menu"}
+                src={p.image_url}
                 alt={p.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            <CardContent className="p-4 space-y-3">
+            )}
+            <CardContent className={`p-4 space-y-3 ${!p.image_url ? "pt-4" : ""}`}>
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{p.name}</h3>
                 <Badge variant={p.is_active ? "secondary" : "destructive"}>{p.is_active ? "Aktif" : "Nonaktif"}</Badge>
@@ -329,6 +363,16 @@ export function MenuManagement() {
                 <Button variant="outline" size="sm" onClick={() => openEdit(p)} className="flex-1">
                   <Edit className="w-4 h-4 mr-2" />
                   Edit
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => {
+                    setDeleteProductId(p.id)
+                    setDeleteProductName(p.name)
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </CardContent>
@@ -343,6 +387,33 @@ export function MenuManagement() {
           </CardContent>
         </Card>
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteProductId !== null} onOpenChange={(open) => {
+        if (!open) {
+          setDeleteProductId(null)
+          setDeleteProductName("")
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Menu</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus menu "{deleteProductName}"? Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteProduct}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Menghapus..." : "Hapus"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
